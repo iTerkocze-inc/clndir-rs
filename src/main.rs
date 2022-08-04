@@ -235,6 +235,8 @@ fn main() {
 				// Gets the file's type
 				let file_type = &file_name.split('.').last().unwrap();
 
+				let mut is_moved : bool = false;
+
 				// Goes through every sorting directory struct and checks if current file belongs to it
 				for sr_dir in &sorting_directories {
 					if sr_dir.dir_types.find(file_type) != None {
@@ -242,10 +244,10 @@ fn main() {
 						if is_output_mode { 
 							lib::info(format!("Moved file \"{}\" to \"{}{}\"", file_name, archive_path, sr_dir.dir_name));
 						}
-						continue;
+						is_moved = true;
 					}
 				}
-				if is_sorting_misc {
+				if is_sorting_misc & !is_moved {
 					drop(Command::new("mv").arg(format!("{}/{}", current_path, file_name)).arg(format!("{}/{}/", &archive_path, misc_dir)).spawn());
 				}
 			}
