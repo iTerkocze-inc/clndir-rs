@@ -239,6 +239,9 @@ fn main() {
 				for sr_dir in &sorting_directories {
 					if sr_dir.dir_types.find(file_type) != None {
 						drop(Command::new("mv").arg(format!("{}/{}", current_path, file_name)).arg(format!("{}/{}/", &archive_path, &sr_dir.dir_name)).spawn());
+						if is_output_mode { 
+							lib::info(format!("Moved file \"{}\" to \"{}{}\"", file_name, archive_path, sr_dir.dir_name));
+						}
 						continue;
 					}
 				}

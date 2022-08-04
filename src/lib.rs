@@ -20,7 +20,7 @@ pub fn config_error (line : u16, msg : String) {
             msg);
 }
 
-pub fn config_warning (line : u16, msg : String) {
+/*pub fn config_warning (line : u16, msg : String) {
     println!("{}{}[ Config Warning | Line: {} ]{}{} {}", 
             Fg(Yellow),
             style::Bold,
@@ -28,7 +28,7 @@ pub fn config_warning (line : u16, msg : String) {
             Fg(Reset),
             style::Reset,
             msg);
-}
+}*/
 
 pub fn generic_warning (msg : String) {
     println!("{}{}[ Warning ]{}{} {}", 
