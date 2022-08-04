@@ -18,7 +18,7 @@ fn main() {
 	}
 
 	// Creates a string which is the path to user's home directory
-	let mut home_path : String =  format!("/home/{uname}");
+	let home_path : String =  format!("/home/{uname}");
 	drop(uname);
 
 	// All the variables set with configs
@@ -115,6 +115,12 @@ fn main() {
 					let parts : Vec<&str> = line.split('=').collect();
 					let param = parts[0].trim();
 					let arg = parts[1].trim().replace('"', "").replace('\'', "");
+					if arg == "" {
+						if !is_silent_mode {
+							lib::config_error(current_line, format!("No value assigned to the parameter: \"{}\"", param));
+						}
+						return;
+					}
 
 					if directories_declaration {
 						if !did_clean {
