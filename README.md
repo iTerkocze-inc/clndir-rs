@@ -8,3 +8,11 @@ cd ./clndir-rs/
 cargo build
 sudo mv ./target/debug/file_sorter /usr/bin/
 ```
+## Roadmap
+✔️ is done, 〰️ is in progress and 🕑 is planned
+- ✔️ Customizable sorting directories and archive folder's name and path
+- ✔️ Cleaning multiple folders
+- 〰️ Sorting files based on their name
+- 🕑 Multi-threaded sorting
+- 🕑 Switching between config files
+- 🕑 Sorting files based on their last modification date
