@@ -16,5 +16,6 @@ sudo mv ./target/debug/file_sorter /usr/bin/
 - 🕑 Multi-threaded sorting
 - 🕑 Switching between config files
 - 🕑 Sorting files based on their last modification date
+- 🕑 Exceptions for files to not move them
 
 ###### This is still in early development so expect frequent updates. I'm open to any ideas ^^
