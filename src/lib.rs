@@ -74,6 +74,10 @@ A directory cleaner with many features and configuration options.
     Fg(Green), style::Reset,)
 }
 
+pub fn version_panel () {
+    println!("{}clndir{} {}", Fg(Green), style::Reset, env!("CARGO_PKG_VERSION"));
+}
+
 pub fn find_dir(dir_find: &String, searched_dir : &String) -> bool {
     let dirs_searched_dir = std::fs::read_dir(&searched_dir).unwrap();
 

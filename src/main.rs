@@ -71,7 +71,8 @@ fn main() {
 				"output" => is_output_mode = true,
 				"default" => is_default_mode = true,
 				"no-misc" => is_sorting_misc = false,
-				"help" => {lib::help_panel(); return},
+				"help" => { lib::help_panel(); return; },
+				"version" => { lib::version_panel(); return; }
 				_ => { if !is_silent_mode { lib::generic_error(format!("Unknown flag: \"{}\"", *arg_to_match)); } return; }
 			}
 		}
@@ -84,7 +85,8 @@ fn main() {
 					'o' => is_output_mode = true,
 					'd' => is_default_mode = true,
 					'm' => is_sorting_misc = false,
-					'h' => {lib::help_panel(); return},
+					'h' => { lib::help_panel(); return; },
+					'v' => { lib::version_panel(); return; }
 					_ =>  { if !is_silent_mode { lib::generic_error(format!("Unknown flag: \"{}\"", one_arg)); } return; }
 				}
 			}
