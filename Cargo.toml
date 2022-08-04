@@ -1,0 +1,12 @@
+[package]
+name = "file_sorter"
+version = "1.0.0"
+edition = "2021"
+autors = "5271"
+homepage = "https://github.com/5271/clndir-rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+termion = "1.5.6"
+users = "0.11"
