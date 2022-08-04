@@ -1,5 +1,5 @@
 [package]
-name = "file_sorter"
+name = "clndir"
 version = "1.0.0"
 edition = "2021"
 autors = "5271"
