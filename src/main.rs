@@ -71,7 +71,7 @@ fn main() {
 				"output" => is_output_mode = true,
 				"default" => is_default_mode = true,
 				"no-misc" => is_sorting_misc = false,
-				"help" => lib::help_panel(),
+				"help" => {lib::help_panel(); return},
 				_ => { if !is_silent_mode { lib::generic_error(format!("Unknown flag: \"{}\"", *arg_to_match)); } return; }
 			}
 		}
@@ -84,7 +84,7 @@ fn main() {
 					'o' => is_output_mode = true,
 					'd' => is_default_mode = true,
 					'm' => is_sorting_misc = false,
-					'h' => lib::help_panel(),
+					'h' => {lib::help_panel(); return},
 					_ =>  { if !is_silent_mode { lib::generic_error(format!("Unknown flag: \"{}\"", one_arg)); } return; }
 				}
 			}
@@ -124,7 +124,6 @@ fn main() {
 						
 						if arg == "*" {
 							misc_dir = String::from(param);
-							lib::info(format!("{}", arg));
 						}
 
 						let temp_sorting_dir = SortingDirectory {
@@ -234,12 +233,10 @@ fn main() {
 				for sr_dir in &sorting_directories {
 					if sr_dir.dir_types.find(file_type) != None {
 						drop(Command::new("mv").arg(format!("{}/{}", current_path, file_name)).arg(format!("{}/{}/", &archive_path, &sr_dir.dir_name)).spawn());
-						lib::info(format!("{file_type} {}", sr_dir.dir_types.find(file_type).unwrap()));
 						continue;
 					}
 				}
 				if is_sorting_misc {
-					lib::info(format!("sos {}", file_type));
 					drop(Command::new("mv").arg(format!("{}/{}", current_path, file_name)).arg(format!("{}/{}/", &archive_path, misc_dir)).spawn());
 				}
 			}
