@@ -2,12 +2,16 @@
 Clndir is a directory cleaning program written in Rust with many features, configuration options and nice colored output.
 
 ## Installation
-To build and install clndir all you have to do is clone this repository and run the ./install.sh script that will build the program and move the binary to `/usr/bin/` or do it manually by running these 3 commands:
+To build and install clndir all you have to do is clone this repository and run the `./install.sh` script that will build the program and move the binary to `/usr/bin/` or do it manually by running these 3 commands:
 ```bash
 cd ./clndir-rs/
 cargo build
 sudo mv ./target/debug/file_sorter /usr/bin/
 ```
+
+## Configuration
+Configs aren't created at the installation and the program can run without them. They are stored in `~/.config/clndir/config.conf`. You can copy the `config.conf` file from the repository to that directory. `config.conf` contains all the config options at the default settings.
+
 ## Roadmap
 ✔️ is done, 〰️ is in progress and 🕑 is planned
 - ✔️ Customizable sorting directories and archive folder's name and path
