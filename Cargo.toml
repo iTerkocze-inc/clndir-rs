@@ -1,6 +1,6 @@
 [package]
 name = "clndir"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2021"
 autors = "5271"
 homepage = "https://github.com/5271/clndir-rs"
@@ -10,3 +10,9 @@ homepage = "https://github.com/5271/clndir-rs"
 [dependencies]
 termion = "1.5.6"
 users = "0.11"
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1

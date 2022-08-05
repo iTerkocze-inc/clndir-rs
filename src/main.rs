@@ -50,7 +50,7 @@ fn main() {
 	let mut is_sorting_misc : bool = true;
 	
 	// Path where to sort the files from
-	let mut paths_to_clear : Vec<String> = vec![];
+	let mut dirs_to_clear : Vec<String> = vec![];
 
 	// Gets all the arguments
 	let mut args : Vec<String> = std::env::args().collect();
@@ -92,7 +92,7 @@ fn main() {
 			}
 		}
 		else {
-			paths_to_clear.push(arg);
+			dirs_to_clear.push(arg);
 		}
 	}
 
@@ -109,7 +109,13 @@ fn main() {
 			for line in conf_lines {
 				current_line += 1;
 				if line.len() != 0 { // Checks if the line isn't empty
-					if line == "[Directories]" { // Sets the direcotires declaration mode
+					// Skips the line on comment
+					if line.chars().next().unwrap() == '#' {
+						continue;
+					}
+
+					// Sets the direcotires declaration mode
+					if line == "[Directories]" { 
 						directories_declaration = true;
 						continue;
 					}
@@ -125,13 +131,17 @@ fn main() {
 					}
 
 					if directories_declaration {
+						// Checks if it has marked that the default sorting directories were cleared so it
+						// doesn't do that again
 						if !did_clean {
 							sorting_directories.clear();
 							did_clean = true;
 						}	
 						
+						// Creates the misc directory if the argument is *
 						if arg == "*" {
 							misc_dir = String::from(param);
+							continue; // Continues to another loop cycle so it doesn't add misc dir to others
 						}
 
 						let temp_sorting_dir = SortingDirectory {
@@ -216,16 +226,24 @@ fn main() {
 		}
 	}
 
-	if paths_to_clear.len() == 0 { paths_to_clear.push(String::from(".")); }
+	if dirs_to_clear.len() == 0 { dirs_to_clear.push(String::from(".")); }
 
-	for current_path in paths_to_clear {
+	for current_dir in dirs_to_clear {
 		// Gets all the files in current directory
-		let files_result = std::fs::read_dir(&current_path);
+		let files_result = std::fs::read_dir(&current_dir);
 		let files : std::fs::ReadDir;
+
+		// Either retrieves the file or shows an error
 		match files_result {
 			Ok(v) => files = v,
-			_ => { if !is_silent_mode { lib::generic_error(format!("No directory found at path: {}", current_path)); } return; }
+			_  => { if !is_silent_mode { 
+						lib::generic_error(format!("No directory found at path: {}", current_dir)); 
+					} 
+					return; }
 		}
+
+		// Formats the current path string so it 
+		let current_dir = String::from(current_dir.trim_start_matches("/"));
 
 		// Goes through every file and moves them
 		for file in files {
@@ -233,16 +251,25 @@ fn main() {
 			if !is_file_dir {    
 				// Gets the file's name
 				let file_name = file.as_ref().unwrap().file_name().into_string().unwrap();
+				let file_name = file_name.trim_start_matches("/");
 
 				// Gets the file's type
 				let file_type = &file_name.split('.').last().unwrap();
 
+				// Bool that indicates if the file was already move - if not then it moves it to the misc
 				let mut is_moved : bool = false;
+
 
 				// Goes through every sorting directory struct and checks if current file belongs to it
 				for sr_dir in &sorting_directories {
 					if sr_dir.dir_types.find(file_type) != None {
-						drop(Command::new("mv").arg(format!("{}/{}", current_path, file_name)).arg(format!("{}/{}/", &archive_path, &sr_dir.dir_name)).spawn());
+						drop(Command::new("mv")
+							// Path to the file to be moved
+							.arg(format!("{}/{}", current_dir, file_name))
+							// Path to the sorting directory
+							.arg(format!("{}/{}/", &archive_path, &sr_dir.dir_name))
+							.spawn());
+
 						if is_output_mode { 
 							lib::info(format!("Moved file \"{}\" to \"{}{}\"", file_name, archive_path, sr_dir.dir_name));
 						}
@@ -250,7 +277,15 @@ fn main() {
 					}
 				}
 				if is_sorting_misc & !is_moved {
-					drop(Command::new("mv").arg(format!("{}/{}", current_path, file_name)).arg(format!("{}/{}/", &archive_path, misc_dir)).spawn());
+					drop(Command::new("mv")
+						// Path to the file to be moved
+						.arg(format!("{}/{}", current_dir, file_name))
+						// Path to the misc sorting directory
+						.arg(format!("{}/{}/", &archive_path, misc_dir))
+						.spawn());
+					if is_output_mode {
+						lib::info(format!("Moved file \"{}\" to \"{}{}\"", file_name, archive_path, misc_dir));
+					}
 				}
 			}
 		}
