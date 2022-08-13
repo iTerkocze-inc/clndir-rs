@@ -5,7 +5,7 @@ Clndir is a directory cleaning program written in Rust with many features, confi
 To build and install clndir all you have to do is clone this repository and run the `./install.sh` script that will build the program and move the binary to `/usr/bin/` or do it manually by running these 3 commands:
 ```bash
 cd ./clndir-rs/
-cargo build
+cargo build --release
 sudo mv ./target/debug/file_sorter /usr/bin/
 ```
 
