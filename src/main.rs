@@ -442,8 +442,9 @@ fn main() {
     dirs_to_clear.push(String::from("."));
   }
 
-  // An arc to be used later
   let sr_dirs_arc = std::sync::Arc::new(sorting_directories);
+  let archive_path_arc = std::sync::Arc::new(archive_path.clone());
+  let misc_dir_arc = std::sync::Arc::new(misc_dir);
 
   // This loop goes through all the directories that have to be cleared and everything else going on in this section
   // will be happening in this for loop
@@ -470,17 +471,15 @@ fn main() {
     let current_dir_arc =
       std::sync::Arc::new(String::from(current_dir.trim_start_matches("/")));
 
-    // Creates an arc for multiple threads
-    let archive_path_arc = std::sync::Arc::new(archive_path.clone());
-
     // Handles to manage threading
     let mut handles = vec![];
 
     // Goes through every file and moves them
     for file in files {
-      let sr_dirs_arc_clone = std::sync::Arc::clone(&sr_dirs_arc);
-      let archive_path_arc_clone = std::sync::Arc::clone(&archive_path_arc);
-      let current_dir_arc_clone = std::sync::Arc::clone(&current_dir_arc);
+      let sr_dirs_arc_clone = sr_dirs_arc.clone();
+      let archive_path_arc_clone = archive_path_arc.clone();
+      let current_dir_arc_clone = current_dir_arc.clone();
+      let misc_dir_arc_clone = misc_dir_arc.clone();
 
       let handle = std::thread::spawn(move || {
         // Checks if the file is a directory and if not then it runs the rest
@@ -532,6 +531,8 @@ fn main() {
                   );
 
                   lib_files::move_file(full_file_path, full_sr_dir_path);
+                  is_moved = true;
+
                   if is_output_mode {
                     lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
                   }
@@ -552,6 +553,8 @@ fn main() {
                   );
 
                   lib_files::move_file(full_file_path, full_sr_dir_path);
+                  is_moved = true;
+
                   if is_output_mode {
                     lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
                   }
@@ -576,6 +579,8 @@ fn main() {
                     );
 
                     lib_files::move_file(full_file_path, full_sr_dir_path);
+                    is_moved = true;
+
                     if is_output_mode {
                       lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
                     }
@@ -608,6 +613,8 @@ fn main() {
                     );
 
                     lib_files::move_file(full_file_path, full_sr_dir_path);
+                    is_moved = true;
+                  
                     if is_output_mode {
                       lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
                     }
@@ -615,6 +622,22 @@ fn main() {
                 }
               }
             }
+          }
+
+          // If no sorting directory fitted the file then it's moved to the misc directory (is the misc directory isn't off)
+          if !is_moved & is_sorting_misc {
+            if is_output_mode {
+              lib_text::info(format!("No sorting directory found for file \"{}\". Moving it to the misc folder", file_name));
+            }
+
+            let full_file_path = format!("{}/{}", current_dir_arc_clone, file_name);
+
+            let full_sr_dir_path = format!(
+              "{}/{}",
+              archive_path_arc_clone, misc_dir_arc_clone
+            );
+
+            lib_files::move_file(full_file_path, full_sr_dir_path);
           }
         }
       });
