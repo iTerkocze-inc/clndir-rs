@@ -18,8 +18,8 @@ Configs aren't created at the installation and the program can run without them.
 - ✔️ Cleaning multiple folders
 - ✔️ Sorting files based on their name
 - ✔️ Multi-threaded sorting
-- 〰️ Switching between config files
-- 🕑 Sorting files based on their last modification date
+- ✔️ Switching between config files
+- 〰️ Sorting files based on their last modification date
 - 🕑 Exceptions for files to not move them
 - 🕑 Separate sorting directories paths
 
