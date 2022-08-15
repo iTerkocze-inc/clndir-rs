@@ -1,6 +1,6 @@
 [package]
 name = "clndir"
-version = "1.1.1"
+version = "1.2.0"
 edition = "2021"
 autors = "5271"
 homepage = "https://github.com/5271/clndir-rs"

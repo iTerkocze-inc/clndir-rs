@@ -1,8 +1,8 @@
 use termion::{color::*, style};
 
 pub fn generic_error(msg: String) {
-  println!(
-    "{}{}[ Error ]{}{} {}",
+  print!(
+    "{}{}[ Error ]{}{} {}\n",
     Fg(Red),
     style::Bold,
     Fg(Reset),
@@ -12,8 +12,8 @@ pub fn generic_error(msg: String) {
 }
 
 pub fn config_error(line: u16, msg: String) {
-  println!(
-    "{}{}[ Config Error | Line: {} ]{}{} {}",
+  print!(
+    "{}{}[ Config Error | Line: {} ]{}{} {}\n",
     Fg(Red),
     style::Bold,
     line,
@@ -34,8 +34,8 @@ pub fn config_error(line: u16, msg: String) {
 }*/
 
 pub fn generic_warning(msg: String) {
-  println!(
-    "{}{}[ Warning ]{}{} {}",
+  print!(
+    "{}{}[ Warning ]{}{} {}\n",
     Fg(Yellow),
     style::Bold,
     Fg(Reset),
@@ -45,8 +45,8 @@ pub fn generic_warning(msg: String) {
 }
 
 pub fn info(msg: String) {
-  println!(
-    "{}{}[ Info ]{}{} {}",
+  print!(
+    "{}{}[ Info ]{}{} {}\n",
     Fg(LightBlue),
     style::Bold,
     Fg(Reset),
@@ -56,7 +56,7 @@ pub fn info(msg: String) {
 }
 
 pub fn help_panel() {
-  println!(
+  print!(
 "{}{}clndir{} {}
 A directory cleaner with many features and configuration options.
 
@@ -72,10 +72,12 @@ A directory cleaner with many features and configuration options.
   {}-m --no-misc      {}Makes program not throw all other files not included in sorting directories
   {}-n --name-sorting {}Program first checks if the file fits to any sorting directory by it's name
   {}  --only-name     {}Program sorts only by name
-  {}  --only-format   {}Program sorts only by format",
+  {}  --only-format   {}Program sorts only by format
+  {}  --config=<path> {}Program will read the configs specified by user\n",
   Fg(Green), style::Bold, style::Reset, env!("CARGO_PKG_VERSION"),
   Fg(Yellow), style::Bold, style::Reset,
   Fg(Yellow), style::Bold, style::Reset, 
+  Fg(Green), style::Reset,
   Fg(Green), style::Reset,
   Fg(Green), style::Reset,
   Fg(Green), style::Reset,
@@ -88,8 +90,8 @@ A directory cleaner with many features and configuration options.
 }
 
 pub fn version_panel() {
-  println!(
-    "{}clndir{} {}",
+  print!(
+    "{}clndir{} {}\n",
     Fg(Green),
     style::Reset,
     env!("CARGO_PKG_VERSION")

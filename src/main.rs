@@ -83,8 +83,8 @@ fn main() {
   let mut is_only_name: bool = false;
   let mut is_only_format: bool = false;
 
-  // Path where to sort the files from
   let mut dirs_to_clear: Vec<String> = vec![];
+  let mut config_path: String = format!("{}/.config/clndir/config.conf", home_path);
 
   // Gets all the arguments
   let mut args: Vec<String> = std::env::args().collect();
@@ -116,10 +116,13 @@ fn main() {
           return;
         }
         _ => {
-          if !is_silent_mode {
-            lib_text::generic_error(format!("Unknown flag: \"{}\"", *arg_to_match));
+          if arg_to_match.starts_with("config=") {
+            config_path = String::from(arg_to_match.trim_start_matches("config="));
           }
-          return;
+          else if !is_silent_mode {
+            lib_text::generic_error(format!("Unknown flag: \"{}\"", arg_to_match));
+            return;
+          }
         }
       }
     } else if arg.chars().next().unwrap() == '-' {
@@ -164,7 +167,7 @@ fn main() {
 
   if !is_default_mode {
     let conf_txt =
-      std::fs::read_to_string(format!("{}/.config/clndir/config.conf", &home_path))
+      std::fs::read_to_string(&config_path)
         .unwrap_or(String::from(""));
     if conf_txt != "" {
       let conf_lines = conf_txt.split('\n');
@@ -339,7 +342,7 @@ fn main() {
       }
     } else if is_output_mode {
       // In output mode prints a warning that there's not config file
-      lib_text::generic_warning(String::from("No configs detected in ~/.config/clndir/"));
+      lib_text::generic_warning(format!("No configs detected in {}", config_path));
     }
     drop(conf_txt);
   } else if is_output_mode {
