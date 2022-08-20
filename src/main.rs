@@ -1,4 +1,4 @@
-use std::{fmt::format, process::Command}; // Command::new("the command").spawn();
+use std::{fmt::format, process::Command}; // Command::new("the &command").spawn();
 use users::get_current_username;
 
 // All the functions used to print warnings, errors and infos
@@ -9,6 +9,7 @@ mod lib_text;
 struct SortingTypes {
   by_name: String,
   by_format: String,
+  by_date: String,
 }
 
 struct SortingDirectory {
@@ -41,30 +42,35 @@ fn main() {
         sorting : SortingTypes {
           by_name : String::from(""),
           by_format : String::from("mp4 webm mkv vob ogv ogg avi mov viv amv m4p m4v mpg mp2 mpeg mpe mpv m2v m4v"),
+          by_date : String::from("")
         }
       },SortingDirectory {
         dir_name : String::from("Pictures"),
         sorting : SortingTypes {
           by_name : String::from(""),
           by_format : String::from("jpg png gif mng jfif exif tiff bmp ppm pgm pbm pnm webp heif avif bat cd5 clip cpt kra mdp pdn psd sai xcf svg svgz bmp"),
+          by_date : String::from("")
         }
       },SortingDirectory {
         dir_name : String::from("Archive files"),
         sorting : SortingTypes {
           by_name : String::from(""),
           by_format : String::from("rar 7z jar a ar iso tar br bz2 gz ls lz4 lzma lzo rz sz xz z apk dmg pea zipx zz"),
+          by_date : String::from("")
         }
       },SortingDirectory {
         dir_name : String::from("Documents"),
         sorting : SortingTypes {
           by_name : String::from(""),
           by_format : String::from("doc pdf md odt xml html sxw htm tex txt gdoc docm epub ott rtf uot fodt docx xhtml xml xls wmf tif tiff odp otp odg fodp uop pptx ppsx potx ppt pps pot pptm odf mml"),
+          by_date : String::from("")
         }
       },SortingDirectory {
         dir_name : String::from("Audio files"),
         sorting : SortingTypes {
           by_name : String::from(""),
           by_format : String::from("mp3 wav ogg aiff oga mogg awb 3gp aac flac"),
+          by_date : String::from("")
         }
       }
   ];
@@ -80,8 +86,10 @@ fn main() {
   let mut is_sorting_misc: bool = true;
 
   let mut is_priority_name_sorting: bool = false;
+  let mut is_priority_date_sorting: bool = false;
   let mut is_only_name: bool = false;
   let mut is_only_format: bool = false;
+  let mut is_only_date: bool = false;
 
   let mut dirs_to_clear: Vec<String> = vec![];
   let mut config_path: String = format!("{}/.config/clndir/config.conf", home_path);
@@ -105,8 +113,10 @@ fn main() {
         "default" => is_default_mode = true,
         "no-misc" => is_sorting_misc = false,
         "name-sorting" => is_priority_name_sorting = true,
+        "last-modified-sorting" => is_priority_date_sorting = true,
         "only-name" => is_only_name = true,
         "only-format" => is_only_format = true,
+        "only-modified-sorting" => is_only_date = true,
         "help" => {
           lib_text::help_panel();
           return;
@@ -156,6 +166,35 @@ fn main() {
     }
   }
 
+  // Checks if any of the is_only_* flags has been set
+  if is_only_date | is_only_format | is_only_name {
+    // Cancels out the sorting type priority flags
+    is_priority_date_sorting = false;
+    is_priority_name_sorting = false;
+  
+    // This counts how many of these flags have been used - if more than one the program will
+    // print an error message and quit
+    let mut amount_is_only : u8 = 0;
+    if is_only_date { amount_is_only += 1; }
+    if is_only_format { amount_is_only += 1; }
+    if is_only_name { amount_is_only += 1; }
+
+    if amount_is_only > 1 {
+      if !is_silent_mode {
+        lib_text::generic_error(String::from("You can use only one flag at a time that specifies what sorting the program will use"));
+      }
+      return;
+    }
+  }
+
+  // Checks if both sorting priority flags have been used - if yes prints an error and quits
+  if is_priority_date_sorting & is_priority_name_sorting {
+    if !is_silent_mode {
+      lib_text::generic_error(String::from("You can use only one flag at a time that specifies which sorting type the program will prioritize"));
+    }
+    return;
+  }
+
   // Cancels out the output mode if silent mode is selected
   if is_silent_mode {
     is_output_mode = false;
@@ -174,7 +213,7 @@ fn main() {
       let mut directories_declaration: bool = false;
       let mut did_clean: bool = false;
       let mut current_line: u16 = 0;
-      for line in conf_lines {
+      'conf_lines_loop: for line in conf_lines {
         current_line += 1;
         if line.len() != 0 {
           // Checks if the line isn't empty
@@ -259,54 +298,76 @@ fn main() {
 
             // Creates the misc directory if the argument is *
             if val == "*" {
-              lib_text::info(String::from("skipping"));
               misc_dir = String::from(param);
               continue; // Continues to another loop cycle so it doesn't add misc dir to others
             }
 
             // Sorting by file format
             if sorting_format == "names" {
-              let mut is_already_existing = false;
               for sr_dir in &mut sorting_directories {
                 if sr_dir.dir_name == param {
                   sr_dir.sorting.by_name = val.clone();
-                  is_already_existing = true;
-                  break;
+                  break 'conf_lines_loop;
                 }
               }
 
-              if !is_already_existing {
-                let temp_sorting_dir = SortingDirectory {
-                  dir_name: String::from(param),
-                  sorting: SortingTypes {
-                    by_name: val,
-                    by_format: String::from(""),
-                  },
-                };
-                sorting_directories.push(temp_sorting_dir);
-              }
+              let temp_sorting_dir = SortingDirectory {
+                dir_name: String::from(param),
+                sorting: SortingTypes {
+                  by_name: val,
+                  by_format: String::from(""),
+                  by_date : String::from("")
+                },
+              };
+              sorting_directories.push(temp_sorting_dir);
             }
             // Sorting by file name
             else if sorting_format == "formats" {
-              let mut is_already_existing = false;
               for sr_dir in &mut sorting_directories {
                 if sr_dir.dir_name == param {
                   sr_dir.sorting.by_format = val.clone();
-                  is_already_existing = true;
-                  break;
+                  break 'conf_lines_loop;
                 }
               }
 
-              if !is_already_existing {
-                let temp_sorting_dir = SortingDirectory {
-                  dir_name: String::from(param),
-                  sorting: SortingTypes {
-                    by_name: String::from(""),
-                    by_format: val,
-                  },
-                };
-                sorting_directories.push(temp_sorting_dir);
+              let temp_sorting_dir = SortingDirectory {
+                dir_name: String::from(param),
+                sorting: SortingTypes {
+                  by_name: String::from(""),
+                  by_format: val,
+                  by_date : String::from("")
+                },
+              };
+              sorting_directories.push(temp_sorting_dir);
+            }
+            // Sorting by last modification date
+            else if sorting_format == "modification" {
+              let val_time : String = val.clone();
+
+              if val_time.split(":").count() != 3 {
+                if !is_silent_mode {
+                  lib_text::config_error(current_line, String::from("Invalid modification date specifier. Modification date specifier should be in this format \"(< or >):(hours):(minutes):(seconds)\" and should be separated by spaces from other speifiers."));
+                }
+                return;
               }
+
+              for sr_dir in &mut sorting_directories {
+                // Modification date specifier
+                if sr_dir.dir_name == param {
+                  sr_dir.sorting.by_date = val_time;
+                  break 'conf_lines_loop;
+                }
+              }
+
+              let temp_sorting_dir = SortingDirectory {
+                dir_name : String::from(param),
+                sorting : SortingTypes {
+                  by_name: String::from(""),
+                  by_format: String::from(""),
+                  by_date: val_time
+                },
+              };
+              sorting_directories.push(temp_sorting_dir);
             }
             // If the sorting format is invalid
             else {
@@ -317,8 +378,10 @@ fn main() {
                 )
               }
               return;
-            }
-          } else {
+            } // If wrong sorting type specified
+          } // If directories declaration
+
+          else {
             // Sets the custom archive path
             match param {
               "archive_path" => archive_path = val,
@@ -335,17 +398,20 @@ fn main() {
                   );
                 }
                 return;
-              }
-            };
-          }
+              } // If wrong parameter
+            }; // Match param
+          } // If not directories declaration
         }
       }
-    } else if is_output_mode {
+    } 
+    else if is_output_mode {
       // In output mode prints a warning that there's not config file
       lib_text::generic_warning(format!("No configs detected in {}", config_path));
     }
     drop(conf_txt);
-  } else if is_output_mode {
+  } // If is default mode
+
+  else if is_output_mode {
     lib_text::info(String::from("Default mode is on so configs weren't readen"));
   }
 
@@ -491,24 +557,33 @@ fn main() {
         if !is_file_dir {
           // Gets the file's name
           let file_name: String = String::from(
-            file.unwrap()
+            file.as_ref()
+              .unwrap()
               .file_name()
               .into_string()
               .unwrap()
               .trim_start_matches("/"),
-          );
+          ); // File name
+          
           // Gets the file's type
           let file_type: String =
             file_name.clone().split('.').last().unwrap().to_string();
+
+          // Gets how long ago the file was modified
+          let file_last_modification = 
+            std::time::SystemTime::now().duration_since(
+              file.as_ref().unwrap().metadata().unwrap().modified().unwrap() // Gets the last modificaton date of the file
+            ).unwrap().as_secs();
+            
           // Bool that indicates if the file was already move - if not then it moves it to the misc
           let mut is_moved: bool = false;
 
-          let sr_dirs = sr_dirs_arc_clone;
-
-          for i in 0..sr_dirs.len() {
-            let current_sr_dir = &sr_dirs[i];
+          // Goes through every sorting directory
+          for i in 0..sr_dirs_arc_clone.len() {
+            let current_sr_dir = &sr_dirs_arc_clone[i];
 
             if is_priority_name_sorting {
+              // Sorting by name
               for sr_dir_regex in current_sr_dir
                 .sorting
                 .by_name
@@ -518,9 +593,7 @@ fn main() {
               {
                 // For some reason when you split the line by spaces it also has some empty cells
                 // so this is an easy fix to this
-                if sr_dir_regex == "" {
-                  continue;
-                }
+                if sr_dir_regex == "" { continue; }
 
                 if lib_files::find_pattern(
                   String::from(sr_dir_regex),
@@ -542,12 +615,205 @@ fn main() {
                 }
               }
 
+              // Sorting by file's format
               for sr_dir_format in current_sr_dir.sorting.by_format.split(" ") {
-                if sr_dir_format == "" {
-                  continue;
-                }
+                if sr_dir_format == "" { continue; }
 
                 if sr_dir_format == file_type {
+                  let full_file_path =
+                    format!("{}/{}", current_dir_arc_clone, file_name);
+
+                  let full_sr_dir_path = format!(
+                    "{}/{}",
+                    archive_path_arc_clone, current_sr_dir.dir_name
+                  );
+
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+                  is_moved = true;
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
+                  } // Output mode
+                } // If the file's type is in the sorting directory
+              } // Sorting by file type
+
+              // Sorting by last modification date
+              for sr_dir_modification in current_sr_dir.sorting.by_date.split(" ") {
+                if sr_dir_modification == "" || sr_dir_modification == "modification" { continue; }
+
+                let full_file_path =
+                  format!("{}/{}", current_dir_arc_clone, file_name);
+
+                let full_sr_dir_path = format!(
+                  "{}/{}",
+                  archive_path_arc_clone, current_sr_dir.dir_name
+                );
+
+                let mut is_smaller_than : bool = false;
+
+                let sr_dir_modification = 
+                  sr_dir_modification
+                  .trim_start_matches("\"").trim_end_matches("\"");
+
+                // Checks what kind of comparision the user wants
+                if sr_dir_modification.chars().next().unwrap() == '<' {
+                  is_smaller_than = true;
+                }
+
+                let sr_dir_modification = 
+                  sr_dir_modification
+                  .trim_start_matches("<").trim_start_matches(">")
+                  .split(":");
+
+                let mut duration_from_config : u64 = 0;
+              
+                let mut current_time_var : u8 = 0;
+                for time_var in sr_dir_modification {
+                  match current_time_var {
+                    // Hours
+                    0 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()*3600).as_secs(),
+
+                    // Minutes
+                    1 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()*60).as_secs(),
+
+                    // Seconds
+                    2 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()).as_secs(),
+
+                    // Don't wory about it - if there's more than three time parts specified then there will be an error
+                    // therefore this line is just a place holder so the compiler won't give an error
+                    _ => { break; }
+                  }
+                  current_time_var += 1;
+                }
+                drop(current_time_var);
+
+                if is_smaller_than && file_last_modification < duration_from_config {
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting directory \"{}\"", file_name, current_sr_dir.dir_name));
+                  }
+                }// Modification earlier
+                else if !is_smaller_than && file_last_modification > duration_from_config {
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting directory \"{}\"", file_name, current_sr_dir.dir_name));
+                  }
+                } // Modification later
+              } // Sorting by modification date
+            } // Name sorting priority
+
+            // Sorting by date priority
+            else if is_priority_date_sorting {
+
+              // Sorting by last modification date
+              for sr_dir_modification in current_sr_dir.sorting.by_date.split(" ") {
+                if sr_dir_modification == "" || sr_dir_modification == "modification" { continue; }
+
+                let full_file_path =
+                  format!("{}/{}", current_dir_arc_clone, file_name);
+
+                let full_sr_dir_path = format!(
+                  "{}/{}",
+                  archive_path_arc_clone, current_sr_dir.dir_name
+                );
+
+                let mut is_smaller_than : bool = false;
+
+                let sr_dir_modification = 
+                  sr_dir_modification
+                  .trim_start_matches("\"").trim_end_matches("\"");
+
+                // Checks what kind of comparision the user wants
+                if sr_dir_modification.chars().next().unwrap() == '<' {
+                  is_smaller_than = true;
+                }
+
+                let sr_dir_modification = 
+                  sr_dir_modification
+                  .trim_start_matches("<").trim_start_matches(">")
+                  .split(":");
+
+                let mut duration_from_config : u64 = 0;
+              
+                let mut current_time_var : u8 = 0;
+                for time_var in sr_dir_modification {
+                  match current_time_var {
+                    // Hours
+                    0 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()*3600).as_secs(),
+
+                    // Minutes
+                    1 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()*60).as_secs(),
+
+                    // Seconds
+                    2 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()).as_secs(),
+
+                    // Don't wory about it - if there's more than three time parts specified then there will be an error
+                    // therefore this line is just a place holder so the compiler won't give an error
+                    _ => { break; }
+                  }
+                  current_time_var += 1;
+                }
+                drop(current_time_var);
+
+                // Moves file if it has been last modified earlier than the specified last modificaton date
+                if is_smaller_than && file_last_modification < duration_from_config {
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting directory \"{}\"", file_name, current_sr_dir.dir_name));
+                  }
+                } // Modification earlier
+
+                // Moves file if it has been last modified later than the specified last modificaton date
+                else if !is_smaller_than && file_last_modification > duration_from_config {
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting directory \"{}\"", file_name, current_sr_dir.dir_name));
+                  }
+                } // Modification later
+              } // Sorting by date
+              
+              // Sorting by format
+              for sr_dir_format in current_sr_dir.sorting.by_format.split(" ") {
+                if sr_dir_format == "" { continue; }
+
+                if sr_dir_format == file_type {
+                  let full_file_path =
+                    format!("{}/{}", current_dir_arc_clone, file_name);
+
+                  let full_sr_dir_path = format!(
+                    "{}/{}",
+                    archive_path_arc_clone, current_sr_dir.dir_name
+                  );
+
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+                  is_moved = true;
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
+                  }
+                } // Moves the file if the format is the same as file's
+              } // Sorting by format
+
+              // Sorting by name
+              for sr_dir_regex in current_sr_dir
+                .sorting
+                .by_name
+                .trim_start_matches("\"")
+                .trim_end_matches("\"")
+                .split(' ')
+              {
+                // For some reason when you split the line by spaces it also has some empty cells
+                // so this is an easy fix to this
+                if sr_dir_regex == "" { continue; }
+
+                if lib_files::find_pattern(
+                  String::from(sr_dir_regex),
+                  file_name.clone(),
+                ) {
                   let full_file_path =
                     format!("{}/{}", current_dir_arc_clone, file_name);
                   let full_sr_dir_path = format!(
@@ -561,13 +827,14 @@ fn main() {
                   if is_output_mode {
                     lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
                   }
-                }
-              }
-            }
-            // If the by name sorting priority isn't turned on then it does default sorting by format first
+                } // Moves the files if the name matches the regex
+              } // Sorting by name
+            } // Sortinng by date priority
+
+            // If no sorting priority is turned on then it does default sorting by format first
             else {
               // If user has specified to sort only by name this won't sort any file my it's format
-              if !is_only_name {
+              if !is_only_name && !is_only_date {
                 for sr_dir_format in current_sr_dir.sorting.by_format.split(" ") {
                   if sr_dir_format == "" {
                     continue;
@@ -576,6 +843,7 @@ fn main() {
                   if sr_dir_format == file_type {
                     let full_file_path =
                       format!("{}/{}", current_dir_arc_clone, file_name);
+
                     let full_sr_dir_path = format!(
                       "{}/{}",
                       archive_path_arc_clone, current_sr_dir.dir_name
@@ -587,12 +855,13 @@ fn main() {
                     if is_output_mode {
                       lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
                     }
-                  }
-                }
-              }
+
+                  } // If the sorting directory has the type for the current file
+                } // For loop going through every sorting directory
+              } // If not sorting only by name or date
 
               // Same there but with format sorting
-              if !is_only_format {
+              if !is_only_format && !is_only_date{
                 for sr_dir_regex in current_sr_dir
                   .sorting
                   .by_name
@@ -620,12 +889,82 @@ fn main() {
                   
                     if is_output_mode {
                       lib_text::info(format!("Moved file \"{}\" to sorting diectory {}", file_name, current_sr_dir.dir_name))
-                    }
-                  }
+                    } // Output mode
+                  } // If name fits the sorting directory regex
+                } // For regex in sorting directory
+              } // Sorting by name
+
+
+              for sr_dir_modification in current_sr_dir.sorting.by_date.split(" ") {
+                if sr_dir_modification == "" || sr_dir_modification == "modification" { continue; }
+
+                let full_file_path =
+                  format!("{}/{}", current_dir_arc_clone, file_name);
+
+                let full_sr_dir_path = format!(
+                  "{}/{}",
+                  archive_path_arc_clone, current_sr_dir.dir_name
+                );
+
+                let mut is_smaller_than : bool = false;
+
+                let sr_dir_modification = 
+                  sr_dir_modification
+                  .trim_start_matches("\"").trim_end_matches("\"");
+
+                // Checks what kind of comparision the user wants
+                if sr_dir_modification.chars().next().unwrap() == '<' {
+                  is_smaller_than = true;
                 }
-              }
-            }
-          }
+
+                // Parsing the date for further working on it
+                let sr_dir_modification = 
+                  sr_dir_modification
+                  .trim_start_matches("<").trim_start_matches(">")
+                  .split(":");
+
+                let mut duration_from_config : u64 = 0;
+              
+                let mut current_time_var : u8 = 0;
+                for time_var in sr_dir_modification {
+                  match current_time_var {
+                    // Hours
+                    0 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()*3600).as_secs(),
+
+                    // Minutes
+                    1 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()*60).as_secs(),
+
+                    // Seconds
+                    2 => duration_from_config += std::time::Duration::from_secs(time_var.parse::<u64>().unwrap()).as_secs(),
+
+                    // Don't wory about it - if there's more than three time parts specified then there will be an error
+                    // therefore this line is just a place holder so the compiler won't give an error
+                    _ => { break; }
+                  }
+                  current_time_var += 1;
+                }
+                drop(current_time_var);
+
+                // Moves file if it has been last modified earlier than the specified last modificaton date
+                if is_smaller_than && file_last_modification < duration_from_config {
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting directory \"{}\"", file_name, current_sr_dir.dir_name));
+                  }
+                } // Modification earlier
+
+                // Moves file if it has been last modified later than the specified last modificaton date
+                else if !is_smaller_than && file_last_modification > duration_from_config {
+                  lib_files::move_file(full_file_path, full_sr_dir_path);
+
+                  if is_output_mode {
+                    lib_text::info(format!("Moved file \"{}\" to sorting directory \"{}\"", file_name, current_sr_dir.dir_name));
+                  }
+                } // Modification later
+              } // Sorting by date
+            } // Default sorting order if no priority specified
+          } // For through every sorting directory
 
           // If no sorting directory fitted the file then it's moved to the misc directory (is the misc directory isn't off)
           if !is_moved & is_sorting_misc {
@@ -641,15 +980,15 @@ fn main() {
             );
 
             lib_files::move_file(full_file_path, full_sr_dir_path);
-          }
-        }
-      });
+          } // Moving to the misc directory
+        } // If the file isn't a directory
+      }); // End of the handle
       handles.push(handle);
-    }
+    } // For every file in directory
 
     // Makes the program wait until all the threads are gone
     for handle in handles {
       let _ = handle.join();
-    }
-  }
-}
+    } // Waiting for the handles
+  } // For every directory to clean
+} // Main function

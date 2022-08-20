@@ -19,8 +19,8 @@ Configs aren't created at the installation and the program can run without them.
 - ✔️ Sorting files based on their name
 - ✔️ Multi-threaded sorting
 - ✔️ Switching between config files
-- 〰️ Sorting files based on their last modification date
-- 🕑 Exceptions for files to not move them
+- ✔️️ Sorting files based on their last modification date
+- 〰️ Exceptions for files to not move them
 - 🕑 Separate sorting directories paths
 
 ###### This is still in early development so expect frequent updates. I'm open to any ideas ^^
