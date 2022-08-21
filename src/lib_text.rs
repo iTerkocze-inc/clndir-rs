@@ -64,19 +64,25 @@ A directory cleaner with many features and configuration options.
   clndir [ARGS AND DIRECTORIES TO CLEAN]...
 
 {}{}ARGS:{}
-  {}-h --help         {}Display this message
-  {}-v --version      {}Show version of the program
-  {}-s --silent       {}Program will display no errors or warnings
-  {}-d --default      {}Program will not read the configs and remain with the default values
-  {}-o --output       {}Program will display more information about what it's doing
-  {}-m --no-misc      {}Makes program not throw all other files not included in sorting directories
-  {}-n --name-sorting {}Program first checks if the file fits to any sorting directory by it's name
-  {}  --only-name     {}Program sorts only by name
-  {}  --only-format   {}Program sorts only by format
-  {}  --config=<path> {}Program will read the configs specified by user\n",
+  {}-h --help                         {}Display this message
+  {}-v --version                      {}Show version of the program
+  {}-s --silent                       {}Will display no errors or warnings
+  {}-d --default                      {}Don't read the configs and remain with the default values
+  {}-o --output                       {}Will display more information about what it's doing
+  {}-m --no-misc                      {}Makes program not throw all other files not included in sorting directories
+  {}   --name-sorting                 {}First sort files by last name - then by format and last modification date
+  {}   --last-modified-sorting        {}First sort files by last modification date - then by format and name
+  {}   --only-name                    {}Program sorts only by name
+  {}   --only-format                  {}Program sorts only by format
+  {}   --only-modification-date       {}Program sorts only by last modification date
+  {}   --config=<path>                {}Read configs in specified path
+  {}   --ignore-files=<files' names>  {}Don't sort the specified files (each separated by , without space)\n",
   Fg(Green), style::Bold, style::Reset, env!("CARGO_PKG_VERSION"),
   Fg(Yellow), style::Bold, style::Reset,
   Fg(Yellow), style::Bold, style::Reset, 
+  Fg(Green), style::Reset,
+  Fg(Green), style::Reset,
+  Fg(Green), style::Reset,
   Fg(Green), style::Reset,
   Fg(Green), style::Reset,
   Fg(Green), style::Reset,
